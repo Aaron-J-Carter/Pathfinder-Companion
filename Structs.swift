@@ -43,11 +43,11 @@ init(name: String, hitMod: Int, damage: [String:String], labels: [String]) {
 func rollHit(attackCount: Int) -> Int {
     if labels.contains("agile") {
         let MAP = 4 * (attackCount - 1)
-        return Int.random(in: 1...20) - MAP + hitMod
+        return d20() - MAP + hitMod
     }
 
     let MAP = 5 * (attackCount - 1)
-    return Int.random(in: 1...20) - MAP + hitMod
+    return d20() - MAP + hitMod
     }
 
 
@@ -77,6 +77,10 @@ func rollDamage() -> [String:Int] {
 
 //Private Functions
 
+//d20 roll
+private func d20() -> Int {
+    return Int.random(in: 1...20)
+}
 
 //takes a damage in the form of "xdy+z" and returns [x,y,z]
 private func damageSplitter (number: String) -> [Int] {
@@ -241,11 +245,20 @@ mutating func takeDamage(damage: [String: Int]) -> Bool {
     return stillAliveChecker()
 }
 
-//Resets all action/attack counters, reduces conditions by 1, and deals persistance damage
+//Resets all action/attack counters and deals persistance damage
 mutating func endTurn() -> Void {
-    
+    currentActionCount = 1
+    currentAttackCount = 1
+
+    for (type, value) in Conditions {
+        if type.contains("Persistent") {
+            takeDamage(damage: [type.removeSubrange("Persistent".startIndex..<"Persistent".endIndex) : value]) //Bruh I just want to remove the "Persistent" from this shit
+        }
+    }
 }
 
+
+//Reduces given condition by 1
 
 
 
@@ -254,6 +267,12 @@ mutating func endTurn() -> Void {
 
 //-------------------------------------------------------------
 //Private Functions
+
+//d20 roll
+private func d20() -> Int {
+    return Int.random(in: 1...20)
+}
+
 //Increments attack count
 private mutating func attackCountIncrement() -> Void {
     self.currentAttackCount += 1
@@ -308,17 +327,22 @@ private func conditionChecker_Attack(_ strike: Strike) -> Int {
 }
 
 
-//Body for takeDamage, takes damage and returns total damage taken
-func _takeDamage(_ damage: [String: Int]) -> Int {
+//Body for takeDamage, takes damage and returns total damage taken. Checks if persistent and adds condition
+private mutating func _takeDamage(_ damage: [String: Int]) -> Int {
     var damageTotal = 0
     for (type, value) in damage {
-        damageTotal += _damageResistanceAndWeaknessChecker(type: type, value: value)
+        if type.contains("Persistent") {
+            addConditions(Conditions: [type : value])
+        }
+        else {
+            damageTotal += _damageResistanceAndWeaknessChecker(type: type, value: value)
+        }
     }
     return damageTotal
 }
 
 //Helper for _takeDamage, takes a single damage type and value and returns adjusted amount based on resistances and weaknesses
-func _damageResistanceAndWeaknessChecker(type: String, value: Int) -> Int {
+private func _damageResistanceAndWeaknessChecker(type: String, value: Int) -> Int {
     for (Wtype, Wvalue) in Weaknesses {
         if type == Wtype {
             return value + Wvalue
@@ -384,6 +408,6 @@ TestMonster.addConditions(Conditions: ["Enfeebled" : 1])
 print(TestMonster.strikeAttempt(name: "Kukri"))
 
 print(TestMonster.HP)
-print(TestMonster.takeDamage(damage: ["Slashing": 6]))
+print(TestMonster.takeDamage(damage: ["Persistent Slashing": 6]))
 print(TestMonster.HP)
 
