@@ -34,25 +34,8 @@ Monster
     endTurn() -> Void
     conditionReducer(conditions: [String]) -> Void
     rollSave(type: String) -> Int
-
-
-
-
-Pathfinder 2e Encounter Helper!
-
-Overall Goal: Make a program to track monsters stat blocks and attacks, making calculating things like MAP and conditions.
-
-First, just making a rig for ^ would be nice, then add in support to put in monster blocks in the program as opposed to in the code. (Possibly insert a .csv file?)
-
-
-
-Observations/Ideas: Make a monster struct that holds all needed values
-    (Do we even need to add base ability scores? Or are just generally useful skills and given attack bonuses enough?)
-    Struct should contain an action counter per turn
-    Should have functions calling things like attack that keeps track of MAP inherently based on interal count of 'Attack' actions
-
-
-Eventually add some overall functions that prompts for things like how many monsters of what kind and such, and include an initiative tracker for monsters and players alike. Then handle a monsters turn by calling appropriat functions on that monster
+    rollInitiative() -> Int
+    rollInitiative(skill: String) -> Int
 
 */
 
@@ -241,6 +224,24 @@ mutating func setResistancesWeaknesses(Resistances: [String:Int], Weaknesses: [S
 
 //--------------------------------------------------------------
 //Public Functions
+
+
+//Roll Perception for Initiative
+func rollInitiative() -> Int {
+    return d20() + Perception
+}
+
+//Overloaded func for alt skill
+func rollInitiative(skill: String) -> Int {
+    if let skillToUse = Skills[skill] {
+        return d20() + skillToUse
+    }
+
+    else {
+        return d20() + Perception
+    }
+}
+
 
 //isTurnOver -> Bool. Checks if turn is over and returns true if so
 func isTurnOver() -> Bool {
@@ -509,6 +510,7 @@ print(TestMonster)
 TestMonster.addAttacks(Attacks: [testStrike])
 TestMonster.addConditions(Conditions: ["Enfeebled" : 1])
 print(TestMonster.strikeAttempt(name: "Kukri"))
+TestMonster.addSkills(Skills: ["Stealth" : 999])
 
 print(TestMonster.HP)
 print(TestMonster.takeDamage(damage: ["Persistent Slashing": 6]))
@@ -530,5 +532,8 @@ TestMonster.conditionReducer(conditions: ["Test1"])
 print(TestMonster.Conditions)
 
 print(TestMonster)
+
+print(TestMonster.rollInitiative())
+print(TestMonster.rollInitiative(skill: "Stealth"))
 
 */
