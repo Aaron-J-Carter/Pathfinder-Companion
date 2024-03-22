@@ -1,4 +1,43 @@
 /*
+Initialization:
+Strike:
+    name: String
+    hitMod: Int
+    damage: [String:String]
+    labels: [String])
+
+Monster:
+    Name: String
+    Perception: Int
+    AC: Int
+    Fort: Int
+    Ref: Int
+    Will: Int
+    Speed: Int
+    HP: Int
+
+Methods you can call:
+Strike: 
+    rollHit(attackCount: Int) -> Int
+    rollDamage() -> [String:Int]
+
+Monster
+    setAbilityScores(Str: Int, Dex: Int, Con: Int, Intel: Int, Wis: Int, Cha: Int) -> Void
+    addAttacks(Attacks: [Strike]) -> Void
+    addSkills(Skills: [String:Int]) -> Void
+    addConditions(Conditions: [String:Int]) -> Void
+    setResistancesWeaknesses(Resistances: [String:Int], Weaknesses: [String:Int]) -> Void
+    isTurnOver() -> Bool
+    stillAliveChecker() -> Bool
+    strikeAttempt(name: String) -> [String:Int]
+    takeDamage(damage: [String: Int]) -> Bool
+    endTurn() -> Void
+    conditionReducer(conditions: [String]) -> Void
+    rollSave(type: String) -> Int
+
+
+
+
 Pathfinder 2e Encounter Helper!
 
 Overall Goal: Make a program to track monsters stat blocks and attacks, making calculating things like MAP and conditions.
@@ -252,16 +291,45 @@ mutating func endTurn() -> Void {
 
     for (type, value) in Conditions {
         if type.contains("Persistent") {
-            takeDamage(damage: [type.removeSubrange("Persistent".startIndex..<"Persistent".endIndex) : value]) //Bruh I just want to remove the "Persistent" from this shit
+            var newType = type
+            newType.removeSubrange("Persistent".startIndex..."Persistent".endIndex)
+
+            if takeDamage(damage: [newType : value]) {
+                if d20() >= 15 {
+                    Conditions.removeValue(forKey: type)
+                }
+
+            }
+
+
         }
+    }
+
+
+}
+
+
+//Reduces given conditions by 1 or removes them if their value would go to 0
+mutating func conditionReducer(conditions: [String]) -> Void {
+    for condition in conditions {
+        _conditionReducer(condition)
     }
 }
 
 
-//Reduces given condition by 1
-
-
-
+//Rolls Saving Throws
+func rollSave(type: String) -> Int {
+    switch type {
+        case "Reflex":
+            return d20() + Ref
+        case "Fortitude":
+            return d20() + Fort
+        case "Will":
+            return d20() + Will
+        default:
+            return d20()
+    }
+}
 
 
 
@@ -363,6 +431,22 @@ private func _damageResistanceAndWeaknessChecker(type: String, value: Int) -> In
 }
 
 
+//Body for conditionReducer, takes one condition at a time and reduces by 1 or removes if at 0 after reducing
+mutating func _conditionReducer(_ condition: String) -> Void {
+    if Conditions[condition]! <= 1 {
+        Conditions.removeValue(forKey: condition)
+    }
+
+    else {
+        Conditions[condition]! -= 1
+    }
+}
+
+
+
+
+
+
 
 
 
@@ -374,13 +458,32 @@ private func _damageResistanceAndWeaknessChecker(type: String, value: Int) -> In
 extension Monster: CustomStringConvertible {
     var description: String {
         let abilityScores = "Str: \(Str), Dex: \(Dex), Con: \(Con), Intel: \(Intel), Wis: \(Wis), Cha: \(Cha) \n"
-        let keyAttributes = "\n"
-        let attacks = "\n"
-        let skills = "\n"
-        let conditions = ""
+        let keyAttributes = "Perception: \(Perception), AC: \(AC), Fortitude Save: \(Fort), Reflex Save: \(Ref), Will Save: \(Will), Speed: \(Speed) \n"
+        var attacks = "Attacks: \n    "
+        for attack in Attacks {
+            attacks += "\(attack.name), "
+        }
+        attacks.removeLast(2)
+        attacks += "\n"
 
 
-        return "\(Name):\n" + abilityScores + keyAttributes + attacks + skills + conditions
+        var skills = "Skills: \n    "
+        for (name, value) in Skills {
+            skills += "\(name) \(value), "
+        }
+        skills.removeLast(2)
+        skills += "\n"
+
+
+        var conditions = "Conditions: \n    "
+        for (name, value) in Conditions {
+            conditions += "\(name) \(value), "
+        }
+        conditions.removeLast(2)
+        conditions += "\n"
+
+
+        return "\(Name) (\(HP) HP):\n" + abilityScores + keyAttributes + attacks + skills + conditions
     }
 }
 
@@ -388,8 +491,8 @@ extension Monster: CustomStringConvertible {
 
 
 //------------------------------------------------------------
-
-var TestMonster = Monster(Name: "Skeleton", Perception: 1, AC: 2, Fort: 3, Ref: 4, Will: 5, Speed: 6, HP: 7)
+/*
+var TestMonster = Monster(Name: "Skeleton", Perception: 1, AC: 2, Fort: 30, Ref: 400, Will: 5000, Speed: 6, HP: 7)
 
 TestMonster.setAbilityScores(Str: -1, Dex: 3, Con: 0, Intel: -3, Wis: -2, Cha: 0)
 
@@ -411,3 +514,21 @@ print(TestMonster.HP)
 print(TestMonster.takeDamage(damage: ["Persistent Slashing": 6]))
 print(TestMonster.HP)
 
+TestMonster.endTurn()
+print(TestMonster.HP)
+print(TestMonster.Conditions)
+
+var testConditions = [
+    "Test1" : 10,
+    "Test2" : 20,
+    "Test3" : 30
+]
+
+TestMonster.addConditions(Conditions: testConditions)
+print(TestMonster.Conditions)
+TestMonster.conditionReducer(conditions: ["Test1"])
+print(TestMonster.Conditions)
+
+print(TestMonster)
+
+*/
