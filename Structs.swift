@@ -156,20 +156,22 @@ extension Strike: CustomStringConvertible {
 struct Monster {
 
 //Monster Parameters
-var Str, Dex, Con, Intel, Wis, Cha: Int
-var Perception, AC, Fort, Ref, Will, Speed, HP: Int
-var Skills, Conditions, Resistances, Weaknesses:  [String : Int]
-var Name: String
-var Attacks: [Strike]
+var Str = 0, Dex = 0, Con = 0, Intel = 0, Wis = 0, Cha = 0
+var Perception = 0, AC = 0, Fort = 0, Ref = 0, Will = 0, Speed = 0, HP = 0
+var Skills: [String : Int] = [:]
+var Conditions: [String : Int] = [:]
+var Resistances: [String : Int] = [:]
+var Weaknesses: [String : Int] = [:]
+var Name: String = ""
+var Attacks: [Strike] = []
 
 //Combat Parameters
-var currentAttackCount: Int //If first attack, should be 1, second attack, should be 2 ...
-var currentActionCount: Int //Similar to ^, starts at 1 and once an action is taken when the count is 3 turn should end
+var currentAttackCount: Int = 1 //If first attack, should be 1, second attack, should be 2 ...
+var currentActionCount: Int = 1//Similar to ^, starts at 1 and once an action is taken when the count is 3 turn should end
 
 
-//Non Ability Score Initializer
-
-init(Name: String, Perception: Int, AC: Int, Fort: Int, Ref: Int, Will: Int, Speed: Int, HP: Int) {
+//Functions to add core attributes, ability scores, skills, conditions, and attacks
+mutating func setCoreAttributes(Name: String, Perception: Int, AC: Int, Fort: Int, Ref: Int, Will: Int, Speed: Int, HP: Int) -> Void {
     self.Name = Name
     self.Perception = Perception
     self.AC = AC
@@ -178,15 +180,9 @@ init(Name: String, Perception: Int, AC: Int, Fort: Int, Ref: Int, Will: Int, Spe
     self.Will = Will
     self.Speed = Speed
     self.HP = HP
-    Str = 0; Dex = 0; Con = 0; Intel = 0; Wis = 0; Cha = 0
-    Skills = [:]; Conditions = [:]; Resistances = [:]; Weaknesses = [:]
-    Attacks = []
-    currentAttackCount = 1
-    currentActionCount = 1
 }
 
 
-//Functions to add ability scores, skills, conditions, and attacks
 mutating func setAbilityScores(Str: Int, Dex: Int, Con: Int, Intel: Int, Wis: Int, Cha: Int) -> Void {
     self.Str = Str
     self.Dex = Dex

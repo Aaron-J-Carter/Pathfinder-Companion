@@ -17,9 +17,36 @@ Eventually add some overall functions that prompts for things like how many mons
 */
 
 //Idea, in Main is where we make a loop of actions. I.e. we ask user for input and a function in a separate file gets called based on input, then its a while loop that resets back to start, asking for more input
-print("Welcome to the ")
-var userInput: String
-repeat {
-    userInput = readLine() ?? ""
+func getUserInput() -> String {
+    return readLine() ?? ""
+}
 
-} while userInput != "End Encounter"
+print("Welcome to the Pathfinder Encounter Helper!")
+var QUIT = false
+repeat {
+    print("1: Add Monsters")
+    print("2: Edit/Check Monsters")
+    print("3: Run Encounter")
+    print("4: Quit Program")
+    var userInput = getUserInput()
+    switch userInput {
+        case "1":
+            addMonster()
+        case "2":
+            editMonster()
+        case "3":
+            runEncounter()
+        case "4":
+            print("Are you sure you'd like to quit? (y/n)")
+            userInput = getUserInput()
+            if userInput == "y" {
+                QUIT = true
+            }
+
+        default:
+            print("Command not understood\n")
+    }
+
+
+
+} while !QUIT
