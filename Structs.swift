@@ -57,6 +57,32 @@ init(name: String, hitMod: Int, damage: [String:String], labels: [String]) {
     self.labels = labels
 }
 
+//Parameter Editing Functions
+mutating func editName(name: String) {
+    self.name = name
+}
+
+mutating func editHitmod(hitMod: Int) {
+    self.hitMod = hitMod
+}
+
+mutating func addDamage(name: String, value: String) {
+    self.damage[name] = value
+}
+
+mutating func removeDamage(name: String) {
+    self.damage.removeValue(forKey: name)
+}
+
+mutating func addLabel(name: String) {
+    self.labels.append(name)
+}
+
+mutating func removeLabel(name: String) {
+    if let index = self.labels.firstIndex(of: name) {
+        self.labels.remove(at: index)
+    }
+}
 
 
 //Public Functions
