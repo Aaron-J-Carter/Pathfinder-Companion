@@ -24,8 +24,8 @@ func getUserInput() -> String {
 print("Welcome to the Pathfinder Encounter Helper!")
 var QUIT = false
 repeat {
-    print("1: Add Monsters")
-    print("2: Edit/Check Monsters")
+    print("1: Add Blank Monster Template")
+    print("2: Edit/Check Monster Templates")
     print("3: Run Encounter")
     print("4: Quit Program")
     var userInput = getUserInput()

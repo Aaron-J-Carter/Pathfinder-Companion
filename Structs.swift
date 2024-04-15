@@ -44,10 +44,10 @@ Monster
 struct Strike {
 
 //Strike Parameters
-let name: String
-let hitMod: Int
-let damage: [String : String]
-let labels: [String]
+var name: String
+var hitMod: Int
+var damage: [String : String]
+var labels: [String]
 
 //Initializer
 init(name: String, hitMod: Int, damage: [String:String], labels: [String]) {
@@ -159,10 +159,25 @@ extension Strike: CustomStringConvertible {
         var _description: String = "\n"
         _description += "Name: \(name) \n"
         _description += "Bonus to hit: \(hitMod) \n"
-        _description += "Damage:\n"
-        for (number, type) in damage {
-            _description += "    \(number) \(type)"
+
+        if damage.count == 0 {
+            _description += "Damage: None"
+        } else if damage.count == 1 {
+            _description += "Damage: "
+
+            for (type, number) in damage {
+                _description += "\(number) \(type)"
+            }
+        } else {
+            _description += "Damage:\n"
+
+            for (type, number) in damage {
+                _description += "    \(number) \(type)"
+            }
         }
+
+
+
         _description += "\n"
         _description += "Traits: "
         for trait in labels {
@@ -228,24 +243,59 @@ mutating func addSkills(Skills: [String:Int]) -> Void {
     }
 }
 
+mutating func removeSkill(Skill: String) -> Void {
+    self.Skills.removeValue(forKey: Skill)
+}
+
+
+
 mutating func addConditions(Conditions: [String:Int]) -> Void {
     for (name, value) in Conditions {
         self.Conditions[name] = value
     }
 }
 
-mutating func setResistancesWeaknesses(Resistances: [String:Int], Weaknesses: [String:Int]) -> Void {
+mutating func removeCondition(Condition: String) -> Void {
+    self.Conditions.removeValue(forKey: Condition)
+}
+
+
+
+
+mutating func addResistances(Resistances: [String:Int]) -> Void {
     for (name, value) in Resistances {
         self.Resistances[name] = value
     }
+}
+
+mutating func removeResistance(Resistance: String) -> Void {
+    self.Resistances.removeValue(forKey: Resistance)
+}
+
+
+
+mutating func addWeaknesses(Weaknesses: [String:Int]) -> Void {
     for (name, value) in Weaknesses {
         self.Weaknesses[name] = value
     }
 }
 
+mutating func removeWeakness(Weakness: String) -> Void {
+    self.Weaknesses.removeValue(forKey: Weakness)
+}
+
 
 //--------------------------------------------------------------
 //Public Functions
+
+//Print Attacks
+func printAttacks() -> Void {
+    for attack in Attacks {
+        print(attack)
+        print("\n")
+    }
+}
+
 
 
 //Roll Perception for Initiative
@@ -264,21 +314,32 @@ func rollInitiative(skill: String) -> Int {
     }
 }
 
+//Rolls given skill, or straight d20 roll if skill not found
+func rollSkill(skill: String) -> Int {
+    if let skillToUse = Skills[skill] {
+        return d20() + skillToUse
+    }
+
+    else {
+        return d20()
+    }
+}
+
 
 //isTurnOver -> Bool. Checks if turn is over and returns true if so
 func isTurnOver() -> Bool {
     var actionNumberAdjuster = 0
-    for (name, value) in Conditions {
-        if name == "Slowed" {
-            actionNumberAdjuster -= value
-        }
-        else if name == "Quickened" {
-            actionNumberAdjuster += value
-        }
-        else if name == "Stunned" || name == "Paralyzed" || name == "Unconscious" {
-            return true
-        }
+
+    if let value = Conditions["Slowed"] {
+        actionNumberAdjuster -= value
     }
+    if let value = Conditions["Quickened"] {
+        actionNumberAdjuster += value
+    }
+    if (Conditions["Stunned"] != nil) || (Conditions["Paralyzed"] != nil) || (Conditions["Unconscious"] != nil) {
+        return true
+    }
+
     return currentActionCount > 3 + actionNumberAdjuster
 }
 
@@ -299,12 +360,11 @@ mutating func strikeAttempt(name: String) -> [String:Int] {
     return ["Error":-1]
 }
 
-//Input raw damage given to monster to affect HP| Returns True if Monster is still Alive
-mutating func takeDamage(damage: [String: Int]) -> Bool {
+//Input raw damage given to monster to affect HP
+mutating func takeDamage(damage: [String : Int]) -> Void {
     let damageTotal:Int = _takeDamage(damage)
     
     HP -= damageTotal
-    return stillAliveChecker()
 }
 
 //Resets all action/attack counters and deals persistance damage
@@ -317,12 +377,13 @@ mutating func endTurn() -> Void {
             var newType = type
             newType.removeSubrange("Persistent".startIndex..."Persistent".endIndex)
 
-            if takeDamage(damage: [newType : value]) {
-                if d20() >= 15 {
-                    Conditions.removeValue(forKey: type)
-                }
-
+            takeDamage(damage: [newType : value]) 
+                 
+            if d20() >= 15 {
+                Conditions.removeValue(forKey: type)
             }
+
+            
 
 
         }
@@ -354,7 +415,15 @@ func rollSave(type: String) -> Int {
     }
 }
 
+//Increments attack count
+mutating func attackCountIncrement() -> Void {
+    self.currentAttackCount += 1
+}
 
+//Increments action count
+mutating func actionCountIncrement() -> Void {
+    self.currentActionCount += 1
+}
 
 //-------------------------------------------------------------
 //Private Functions
@@ -362,16 +431,6 @@ func rollSave(type: String) -> Int {
 //d20 roll
 private func d20() -> Int {
     return Int.random(in: 1...20)
-}
-
-//Increments attack count
-private mutating func attackCountIncrement() -> Void {
-    self.currentAttackCount += 1
-}
-
-//Increments action count
-private mutating func actionCountIncrement() -> Void {
-    self.currentActionCount += 1
 }
 
 
@@ -387,7 +446,6 @@ private mutating func _strikeAttempt(_ strike: Strike) -> [String:Int] {
     }
     
     attackCountIncrement()
-    actionCountIncrement()
 
     return strikeResults
 }
@@ -455,7 +513,7 @@ private func _damageResistanceAndWeaknessChecker(type: String, value: Int) -> In
 
 
 //Body for conditionReducer, takes one condition at a time and reduces by 1 or removes if at 0 after reducing
-mutating func _conditionReducer(_ condition: String) -> Void {
+private mutating func _conditionReducer(_ condition: String) -> Void {
     if Conditions[condition]! <= 1 {
         Conditions.removeValue(forKey: condition)
     }
@@ -482,80 +540,81 @@ extension Monster: CustomStringConvertible {
     var description: String {
         let abilityScores = "Str: \(Str), Dex: \(Dex), Con: \(Con), Intel: \(Intel), Wis: \(Wis), Cha: \(Cha) \n"
         let keyAttributes = "Perception: \(Perception), AC: \(AC), Fortitude Save: \(Fort), Reflex Save: \(Ref), Will Save: \(Will), Speed: \(Speed) \n"
-        var attacks = "Attacks: \n    "
-        for attack in Attacks {
-            attacks += "\(attack.name), "
+
+
+
+        var attacks: String
+        if Attacks.isEmpty {
+            attacks = "No Attacks"
+        } else {
+            attacks = "Attacks:  "
+            for attack in Attacks {
+                attacks += "\(attack.name), "
+            }
+            attacks.removeLast(2)
         }
-        attacks.removeLast(2)
         attacks += "\n"
 
 
-        var skills = "Skills: \n    "
-        for (name, value) in Skills {
-            skills += "\(name) \(value), "
+        var skills: String
+        if Skills.isEmpty {
+            skills = "No Skills"
+        } else {
+            skills = "Skills: "
+            for (name, value) in Skills {
+                skills += "\(name) \(value), "
+            }
+            skills.removeLast(2)
         }
-        skills.removeLast(2)
         skills += "\n"
 
 
-        var conditions = "Conditions: \n    "
-        for (name, value) in Conditions {
-            conditions += "\(name) \(value), "
+        var conditions: String
+        if Conditions.isEmpty {
+            conditions = "No Conditions"
+        } else {
+            conditions = "Conditions: "
+            for (name, value) in Conditions {
+                conditions += "\(name) \(value), "
+            }
+            conditions.removeLast(2)
         }
-        conditions.removeLast(2)
         conditions += "\n"
 
 
-        return "\(Name) (\(HP) HP):\n" + abilityScores + keyAttributes + attacks + skills + conditions
+        var resistances: String
+        if Resistances.isEmpty {
+            resistances = "No Resistances"
+        } else {
+            resistances = "Resistances: "
+            for (name, value) in Resistances {
+                resistances += "\(name) \(value), "
+            }
+            resistances.removeLast(2)
+        }
+        resistances += "\n"
+
+
+        var weaknesses: String
+        if Weaknesses.isEmpty {
+            weaknesses = "No Weaknesses"
+        } else {
+            weaknesses = "Weaknesses: "
+            for (name, value) in Weaknesses {
+                weaknesses += "\(name) \(value), "
+            }
+            weaknesses.removeLast(2)
+        }
+        weaknesses += "\n"
+
+        var name: String
+        if Name == "" {
+            name = "No Name Given"
+        }
+        else {
+            name = Name
+        }
+
+        return "\(name) (\(HP) HP):\n" + abilityScores + keyAttributes + attacks + skills + conditions + resistances + weaknesses
     }
 }
-
-
-
-
-//------------------------------------------------------------
-/*
-var TestMonster = Monster(Name: "Skeleton", Perception: 1, AC: 2, Fort: 30, Ref: 400, Will: 5000, Speed: 6, HP: 7)
-
-TestMonster.setAbilityScores(Str: -1, Dex: 3, Con: 0, Intel: -3, Wis: -2, Cha: 0)
-
-
-var kukri = [
-    "Slashing" : "1d6+9",
-    "Persistent Bleed" : "2d6",
-    "Evil" : "1d4"
-]
-var testStrike: Strike = Strike(name: "Kukri", hitMod: 18, damage: kukri, labels: ["agile", "trip"])
-var testStrike2: Strike = Strike(name: "Kukri2", hitMod: 18, damage: kukri, labels: ["agile", "trip"])
-
-print(TestMonster)
-TestMonster.addAttacks(Attacks: [testStrike])
-TestMonster.addConditions(Conditions: ["Enfeebled" : 1])
-print(TestMonster.strikeAttempt(name: "Kukri"))
-TestMonster.addSkills(Skills: ["Stealth" : 999])
-
-print(TestMonster.HP)
-print(TestMonster.takeDamage(damage: ["Persistent Slashing": 6]))
-print(TestMonster.HP)
-
-TestMonster.endTurn()
-print(TestMonster.HP)
-print(TestMonster.Conditions)
-
-var testConditions = [
-    "Test1" : 10,
-    "Test2" : 20,
-    "Test3" : 30
-]
-
-TestMonster.addConditions(Conditions: testConditions)
-print(TestMonster.Conditions)
-TestMonster.conditionReducer(conditions: ["Test1"])
-print(TestMonster.Conditions)
-
-print(TestMonster)
-
-print(TestMonster.rollInitiative())
-print(TestMonster.rollInitiative(skill: "Stealth"))
-
-*/
