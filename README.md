@@ -10,3 +10,7 @@ As it stands, Monsters can not add anything other than simple attacks, and playe
 
 
 Although there is much in terms of mechanics, like damage types, to add, I would like to work on making this a more user friendly experience by having it open an actual UI instead of a command line program. This is going to take some time for sure, but once I have an actual UI set up, it will make implementing all the other things I need considerably easier, as I can drop things into a screen, as opposed to figuring out how to deal with menu-ing into them only. This means my next update might be awhile, but also it will be actually usable for most people. At least thats the idea
+
+
+
+This repository comes with both the code for each portion of the program written in swift, and a pre-compiled executable if you'd rather just run the program
