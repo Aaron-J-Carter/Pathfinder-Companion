@@ -1,4 +1,4 @@
-# Pathfinder-Encounter-Helper
+# Pathfinder-Compantion
 THIS IS A VERY EARLY TEST BUILD, MEANT TO HELP ME FOR MY UPCOMING GAME, THERE IS MUCH THAT WILL BE ADDED AND CHANGED IN THE FUTURE
 
 Helper program for the GM to handle combats/encounters in Pathfinder 2e. For use in an in person setting, as a supplement to the game board.
